@@ -1,23 +1,25 @@
 package com.gerimedica.codingTest.service;
 
+import java.io.StringWriter;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.gerimedica.codingTest.to.ProductTO;
-import com.gerimedica.codingTest.to.Response;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 
 @Service
 public interface ProductService {
-	Response<ProductTO> createAllproduct(MultipartFile file);
+	void createAllproduct(MultipartFile file);
 
-	Response<ProductTO> findProductWithCode(String code);
+	ProductTO findProductWithCode(String code);
 
-	Response<List<ProductTO>> findAllProductsInJson();
+	List<ProductTO> findAllProductsInJson();
 
-	String findAllProductsInCSV();
+	StringWriter findAllProductsInCSV() throws CsvDataTypeMismatchException, CsvRequiredFieldEmptyException;
 
-	Response<ProductTO> deleteAllProducts();
+	void deleteAllProducts();
 
 }

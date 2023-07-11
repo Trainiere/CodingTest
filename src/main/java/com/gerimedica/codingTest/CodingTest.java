@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
-public class GerimedicaCodingTestApplication {
+public class CodingTest {
 
 	@Bean
 	public ModelMapper modelMapper() {
@@ -14,7 +14,7 @@ public class GerimedicaCodingTestApplication {
 	}
 
 	public static void main(String[] args) {
-		SpringApplication.run(GerimedicaCodingTestApplication.class, args);
+		SpringApplication.run(CodingTest.class, args);
 	}
 
 }

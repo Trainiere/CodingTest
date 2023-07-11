@@ -1,99 +1,36 @@
 package com.gerimedica.codingTest.to;
 
-import java.io.Serializable;
+import com.opencsv.bean.CsvBindByName;
 
-public class ProductTO implements Serializable, Cloneable {
+import lombok.Data;
+
+@Data
+public class ProductTO {
 
 	/**
 	 * 
 	 */
 
-	private static final long serialVersionUID = 1L;
-
+	@CsvBindByName(column = "source")
 	private String source;
+	@CsvBindByName(column = "codeListCode")
 	private String codeListCode;
+	@CsvBindByName(column = "code")
 	private String code;
+	@CsvBindByName(column = "displayValue")
 	private String displayValue;
+	@CsvBindByName(column = "longDescription")
 	private String longDescription;
+	@CsvBindByName(column = "fromDate")
 	private String fromDate;
+	@CsvBindByName(column = "toDate")
 	private String toDate;
+	@CsvBindByName(column = "sortingPriority")
 	private String sortingPriority;
-
-	public String getSource() {
-		return source;
-	}
-
-	public void setSource(String source) {
-		this.source = source;
-	}
-
-	public String getCodeListCode() {
-		return codeListCode;
-	}
-
-	public void setCodeListCode(String codeListCode) {
-		this.codeListCode = codeListCode;
-	}
-
-	public String getCode() {
-		return code;
-	}
-
-	public void setCode(String code) {
-		this.code = code;
-	}
-
-	public String getDisplayValue() {
-		return displayValue;
-	}
-
-	public void setDisplayValue(String displayValue) {
-		this.displayValue = displayValue;
-	}
-
-	public String getLongDescription() {
-		return longDescription;
-	}
-
-	public void setLongDescription(String longDescription) {
-		this.longDescription = longDescription;
-	}
-
-	public String getFromDate() {
-		return fromDate;
-	}
-
-	public void setFromDate(String fromDate) {
-		this.fromDate = fromDate;
-	}
-
-	public String getToDate() {
-		return toDate;
-	}
-
-	public void setToDate(String toDate) {
-		this.toDate = toDate;
-	}
-
-	public String getSortingPriority() {
-		return sortingPriority;
-	}
-
-	public void setSortingPriority(String sortingPriority) {
-		this.sortingPriority = sortingPriority;
-	}
-
-	@Override
-	public String toString() {
-		return "\"" + source + "\"," + "\"" + codeListCode + "\"," + "\"" + code + "\"," + "\"" + displayValue + "\","
-				+ "\"" + longDescription + "\"," + "\"" + fromDate + "\"," + "\"" + toDate + "\"," + "\""
-				+ sortingPriority + "\"";
-	}
 
 	public ProductTO(String source, String codeListCode, String code, String displayValue, String longDescription,
 			String fromDate, String toDate, String sortingPriority) {
 		super();
-		this.source = source;
 		this.codeListCode = codeListCode;
 		this.code = code;
 		this.displayValue = displayValue;

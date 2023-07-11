@@ -1,11 +1,9 @@
 package com.gerimedica.codingTest.service;
 
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.io.Reader;
+import java.io.StringWriter;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
@@ -17,10 +15,18 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.gerimedica.codingTest.controller.ProductController;
 import com.gerimedica.codingTest.dao.ProductDao;
+import com.gerimedica.codingTest.exception.ProductException;
 import com.gerimedica.codingTest.exception.ProductNotFoundException;
-import com.gerimedica.codingTest.model.Product;
 import com.gerimedica.codingTest.to.ProductTO;
 import com.gerimedica.codingTest.to.Response;
+import com.opencsv.CSVWriter;
+import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.bean.HeaderColumnNameMappingStrategy;
+import com.opencsv.bean.MappingStrategy;
+import com.opencsv.bean.StatefulBeanToCsv;
+import com.opencsv.bean.StatefulBeanToCsvBuilder;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -28,106 +34,64 @@ public class ProductServiceImpl implements ProductService {
 	Logger log = LoggerFactory.getLogger(ProductController.class);
 
 	@Autowired
-	private ProductDao employeeDao;
+	private ProductDao productDao;
 
 	@Autowired
 	private ModelMapper modelMapper;
 
 	@Override
-	public Response<ProductTO> createAllproduct(MultipartFile file) {
-		Response<ProductTO> response = new Response<>();
-		List<ProductTO> inputList = new ArrayList<ProductTO>();
-		boolean isValid = true;
+	public void createAllproduct(MultipartFile file) {
 		if (file == null || !file.getOriginalFilename().endsWith(".csv")) {
-			log.error("File is not a csv file\n");
-			response.setMessage("File is not a csv file");
-			isValid = false;
+			throw new ProductException("File is not a csv file");
 		}
 		if (file == null || file.getSize() == 0) {
-			log.error("Empty File is uploaded\n");
-			response.setMessage("Empty File is uploaded");
-			isValid = false;
+			throw new ProductException("Empty File is uploaded");
 		}
-		if (isValid) {
-			try {
-				BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()));
-				inputList = br.lines().skip(1).map(mapToProduct).collect(Collectors.toList());
-				br.close();
-			} catch (IOException e) {
-				log.error("Error occured while reading csv file\n" + e);
-				response.setMessage("Error occured while reading csv file");
-				response.setException(e);
-			}
-			employeeDao.saveAll(
-					inputList.stream().map(emp -> modelMapper.map(emp, Product.class)).collect(Collectors.toList()));
-			response.setMessage("All products created successfully");
+		try (Reader reader = new InputStreamReader(file.getInputStream())) {
+			List<ProductTO> products = new CsvToBeanBuilder<ProductTO>(reader).withType(ProductTO.class)
+					.withIgnoreLeadingWhiteSpace(true).withIgnoreEmptyLine(true).build().parse();
+			productDao.saveAll(products.stream().map(product -> modelMapper.map(product, Product.class))
+					.collect(Collectors.toList()));
+
+		} catch (Exception e) {
+			throw new ProductException("Error occured while reading csv file");
 		}
-		return response;
+
 	}
 
 	@Override
-	public Response<ProductTO> findProductWithCode(String code) {
-		Response<ProductTO> response = new Response<>();
-		try {
-			response.setAttachedObject(this.findProductByCode(code));
-		} catch (ProductNotFoundException e) {
-			log.error("Product Not Found\n" + e);
-			response.setException(e);
-			response.setMessage("Product Not Found");
-		}
-		return response;
-	}
-
-	@Override
-	public Response<List<ProductTO>> findAllProductsInJson() {
-		Response<List<ProductTO>> response = new Response<>();
-		response.setAttachedObject(employeeDao.findAll().stream().map(emp -> modelMapper.map(emp, ProductTO.class))
-				.collect(Collectors.toList()));
-		log.info("Retrived all products");
-		return response;
-	}
-
-	@Override
-	public String findAllProductsInCSV() {
-		List<ProductTO> allProducts = employeeDao.findAll().stream().map(emp -> modelMapper.map(emp, ProductTO.class))
-				.collect(Collectors.toList());
-		log.info("List of products are downloaded as csv file");
-		return convertToCSV(allProducts);
-	}
-
-	@Override
-	public Response<ProductTO> deleteAllProducts() {
-		Response<ProductTO> response = new Response<>();
-		employeeDao.deleteAll();
-		response.setMessage("All Products deleted successfully");
-		log.info("All Products deleted successfully");
-		return response;
-	}
-
-	private Function<String, ProductTO> mapToProduct = (line) -> {
-		String[] p = line.split(",");
-		ProductTO product = new ProductTO();
-		product.setSource(p[0].substring(1, p[0].length() - 1));
-		product.setCodeListCode(p[1].substring(1, p[1].length() - 1));
-		product.setCode(p[2].substring(1, p[2].length() - 1));
-		product.setDisplayValue(p[3].substring(1, p[3].length() - 1));
-		product.setLongDescription(p[4].substring(1, p[4].length() - 1));
-		product.setFromDate(p[5].substring(1, p[5].length() - 1));
-		product.setToDate(p[6].substring(1, p[6].length() - 1));
-		product.setSortingPriority(p[7].substring(1, p[7].length() - 1));
-		return product;
-	};
-
-	private String convertToCSV(List<ProductTO> allProducts) {
-		String HEADER = "\"source\",\"codeListCode\",\"code\",\"displayValue\",\"longDescription\",\"fromDate\",\"toDate\",\"sortingPriority\"\n";
-		List<String> productList = new ArrayList<>();
-		productList.add(HEADER);
-		return HEADER.concat(allProducts.stream().map(ProductTO::toString).collect(Collectors.joining("\n")));
-	}
-
-	private ProductTO findProductByCode(final String code) {
+	public ProductTO findProductWithCode(String code) {
 		return modelMapper.map(
-				employeeDao.findById(code).orElseThrow(() -> new ProductNotFoundException("Product Not Found")),
+				productDao.findById(code).orElseThrow(() -> new ProductNotFoundException("Product Not Found")),
 				ProductTO.class);
 	}
+
+	@Override
+	public List<ProductTO> findAllProductsInJson() {
+		List<ProductTO> products = productDao.findAll().stream().map(emp -> modelMapper.map(emp, ProductTO.class))
+				.collect(Collectors.toList());
+		log.info("Retrived all products");
+		return products;
+	}
+
+	@Override
+	public StringWriter findAllProductsInCSV() throws CsvDataTypeMismatchException, CsvRequiredFieldEmptyException{
+		List<ProductTO> allProducts = productDao.findAll().stream().map(emp -> modelMapper.map(emp, ProductTO.class))
+				.collect(Collectors.toList());
+		StringWriter stringWriter = new StringWriter();
+			MappingStrategy<ProductTO> columnStrategy = new HeaderColumnNameMappingStrategy<ProductTO>();
+			columnStrategy.setType(ProductTO.class);
+			StatefulBeanToCsv<ProductTO> csvBuilder = new StatefulBeanToCsvBuilder<ProductTO>(stringWriter)
+					.withSeparator(CSVWriter.DEFAULT_SEPARATOR).withQuotechar(CSVWriter.DEFAULT_QUOTE_CHARACTER)
+					.withMappingStrategy(columnStrategy).build();
+			csvBuilder.write(allProducts);
+		return stringWriter;
+	}
+
+	@Override
+	public void deleteAllProducts() {
+		productDao.deleteAll();
+		log.info("All Products deleted successfully");
+	}
+
 }

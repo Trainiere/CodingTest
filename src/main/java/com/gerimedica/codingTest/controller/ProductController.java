@@ -1,14 +1,11 @@
 package com.gerimedica.codingTest.controller;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.InputStreamSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -27,7 +24,7 @@ import com.gerimedica.codingTest.to.ProductTO;
 import com.gerimedica.codingTest.to.Response;
 
 @RestController
-@RequestMapping("/product")
+@RequestMapping(path = "/product")
 public class ProductController {
 
 	Logger log = LoggerFactory.getLogger(ProductController.class);
@@ -38,7 +35,7 @@ public class ProductController {
 	/**
 	 * Upload a csv file to DB * @return
 	 */
-	@PostMapping(path = "/upload")
+	@PostMapping(path = "/upload" , consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
 	public ResponseEntity<Response<ProductTO>> uploadFile(@RequestParam("file") MultipartFile file) {
 		return ResponseEntity.status(HttpStatus.OK).body(productService.createAllproduct(file));
 	}
@@ -59,12 +56,10 @@ public class ProductController {
 	 * @return
 	 */
 	@GetMapping(path = "/download", produces = "text/csv")
-	public ResponseEntity<InputStreamSource> fetchAllDataAsCsv() {
-		String initialString = productService.findAllProductsInCSV();
-		InputStream targetStream = new ByteArrayInputStream(initialString.getBytes());
-		InputStreamResource file = new InputStreamResource(targetStream);
+	public ResponseEntity<String> fetchAllDataAsCsv() {
+		StringWriter initialString = productService.findAllProductsInCSV();
 		return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=exercise.csv")
-				.contentType(MediaType.parseMediaType("application/csv")).body(file);
+				.contentType(MediaType.parseMediaType("application/csv")).body(initialString.toString());
 	}
 
 	/**
@@ -74,7 +69,7 @@ public class ProductController {
 	 * @return
 	 */
 	@GetMapping(path = "/{code}")
-	public ResponseEntity<Response<ProductTO>> findProductWithCode(@PathVariable String code) {
+	public ResponseEntity<ProductTO>> findProductWithCode(@PathVariable String code) {
 		return ResponseEntity.ok(productService.findProductWithCode(code));
 	}
 

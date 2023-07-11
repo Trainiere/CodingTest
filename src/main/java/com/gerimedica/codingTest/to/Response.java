@@ -2,6 +2,13 @@ package com.gerimedica.codingTest.to;
 
 import java.io.Serializable;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Response<T> implements Cloneable, Serializable {
 
 	/**
@@ -11,29 +18,5 @@ public class Response<T> implements Cloneable, Serializable {
 	private String message;
 	private T attachedObject;
 	private Exception exception;
-
-	public String getMessage() {
-		return message;
-	}
-
-	public void setMessage(String message) {
-		this.message = message;
-	}
-
-	public T getAttachedObject() {
-		return attachedObject;
-	}
-
-	public void setAttachedObject(T attachedObject) {
-		this.attachedObject = attachedObject;
-	}
-
-	public Exception getException() {
-		return exception;
-	}
-
-	public void setException(Exception exception) {
-		this.exception = exception;
-	}
-
+	
 }
