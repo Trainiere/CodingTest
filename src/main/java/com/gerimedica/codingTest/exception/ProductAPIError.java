@@ -1,5 +1,7 @@
 package com.gerimedica.codingTest.exception;
 
+import org.springframework.http.HttpStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ProductAPIError {
 
-	private String statusCode;
+	private HttpStatus statusCode;
 	private String errorMessage;
 
 }

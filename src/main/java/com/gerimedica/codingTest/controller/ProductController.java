@@ -22,6 +22,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.gerimedica.codingTest.service.ProductService;
 import com.gerimedica.codingTest.to.ProductTO;
 import com.gerimedica.codingTest.to.Response;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 
 @RestController
 @RequestMapping(path = "/product")
@@ -36,8 +38,9 @@ public class ProductController {
 	 * Upload a csv file to DB * @return
 	 */
 	@PostMapping(path = "/upload" , consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-	public ResponseEntity<Response<ProductTO>> uploadFile(@RequestParam("file") MultipartFile file) {
-		return ResponseEntity.status(HttpStatus.OK).body(productService.createAllproduct(file));
+	public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
+		productService.createAllproduct(file);
+		return ResponseEntity.status(HttpStatus.CREATED).body("All records added successfully");
 	}
 
 	/**
@@ -46,7 +49,7 @@ public class ProductController {
 	 * @return
 	 */
 	@GetMapping(path = "/fetchAll")
-	public ResponseEntity<Response<List<ProductTO>>> findAllProducts() {
+	public ResponseEntity<List<ProductTO>> findAllProducts() {
 		return ResponseEntity.ok(productService.findAllProductsInJson());
 	}
 
@@ -56,7 +59,7 @@ public class ProductController {
 	 * @return
 	 */
 	@GetMapping(path = "/download", produces = "text/csv")
-	public ResponseEntity<String> fetchAllDataAsCsv() {
+	public ResponseEntity<String> fetchAllDataAsCsv() throws CsvDataTypeMismatchException, CsvRequiredFieldEmptyException{
 		StringWriter initialString = productService.findAllProductsInCSV();
 		return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=exercise.csv")
 				.contentType(MediaType.parseMediaType("application/csv")).body(initialString.toString());
@@ -68,8 +71,8 @@ public class ProductController {
 	 * @param code
 	 * @return
 	 */
-	@GetMapping(path = "/{code}")
-	public ResponseEntity<ProductTO>> findProductWithCode(@PathVariable String code) {
+	@GetMapping(path = "/code/{code}")
+	public ResponseEntity<ProductTO> findProductWithCode(@PathVariable String code) {
 		return ResponseEntity.ok(productService.findProductWithCode(code));
 	}
 
@@ -79,8 +82,8 @@ public class ProductController {
 	 * @return
 	 */
 	@DeleteMapping(path = "/deleteAll")
-	public ResponseEntity<Response<ProductTO>> deleteAllProducts() {
+	public ResponseEntity<String> deleteAllProducts() {
 		productService.deleteAllProducts();
-		return ResponseEntity.status(HttpStatus.OK).body(productService.deleteAllProducts());
+		return ResponseEntity.status(HttpStatus.OK).body("All products deleted successfully");
 	}
 }

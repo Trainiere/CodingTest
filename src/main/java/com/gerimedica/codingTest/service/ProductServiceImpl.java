@@ -17,8 +17,8 @@ import com.gerimedica.codingTest.controller.ProductController;
 import com.gerimedica.codingTest.dao.ProductDao;
 import com.gerimedica.codingTest.exception.ProductException;
 import com.gerimedica.codingTest.exception.ProductNotFoundException;
+import com.gerimedica.codingTest.model.Product;
 import com.gerimedica.codingTest.to.ProductTO;
-import com.gerimedica.codingTest.to.Response;
 import com.opencsv.CSVWriter;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.bean.HeaderColumnNameMappingStrategy;
@@ -50,7 +50,9 @@ public class ProductServiceImpl implements ProductService {
 		try (Reader reader = new InputStreamReader(file.getInputStream())) {
 			List<ProductTO> products = new CsvToBeanBuilder<ProductTO>(reader).withType(ProductTO.class)
 					.withIgnoreLeadingWhiteSpace(true).withIgnoreEmptyLine(true).build().parse();
-			productDao.saveAll(products.stream().map(product -> modelMapper.map(product, Product.class))
+			productDao.saveAll(
+					products.stream()
+					.map(product -> modelMapper.map(product, Product.class))
 					.collect(Collectors.toList()));
 
 		} catch (Exception e) {
